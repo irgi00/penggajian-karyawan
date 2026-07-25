@@ -16,6 +16,7 @@ export function error(message: string, status: number = 400) {
     {
       success: false,
       message,
+      error: message,
     },
     { status }
   );

@@ -1,13 +1,12 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import AdminShell from "@/components/layout/admin-shell";
+import { getSession } from "@/lib/auth";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies();
-  const role = cookieStore.get("user_role")?.value;
+  const session = await getSession();
 
-  if (role !== "admin") {
-    if (role === "karyawan") {
+  if (session?.role !== "ADMIN") {
+    if (session?.role === "EMPLOYEE") {
       redirect("/karyawan");
     } else {
       redirect("/login");

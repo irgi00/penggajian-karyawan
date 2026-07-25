@@ -4,17 +4,16 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { PageHeader } from "@/components/ui/page-header";
 import { Badge } from "@/components/ui/badge";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Printer } from "lucide-react";
 
-import { use } from "react";
-
-export default function PayrollDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function PayrollDetailPage() {
+  const params = useParams<{ id: string }>();
+  const id = params.id;
   const [payroll, setPayroll] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
@@ -27,7 +26,7 @@ export default function PayrollDetailPage({ params }: { params: Promise<{ id: st
         if (json.success) {
           setPayroll(json.data.payroll);
         } else {
-          setErrorMsg(json.error || "Gagal mengambil data");
+          setErrorMsg(json.message || json.error || "Gagal mengambil data");
         }
       } catch (err: any) {
         setErrorMsg(err.message || "Kesalahan server");
@@ -75,10 +74,7 @@ export default function PayrollDetailPage({ params }: { params: Promise<{ id: st
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <PageHeader
-          title={`Slip Gaji: ${payroll.employee_name}`}
-          description={`Periode: ${payroll.period_name}`}
-        />
+        <PageHeader title={`Slip Gaji: ${payroll.employee_name}`} description={`Periode: ${payroll.period_name}`} />
         <div className="flex gap-2">
           <Button variant="outline" className="gap-2" onClick={() => window.print()}>
             <Printer className="w-4 h-4" /> Cetak Slip
@@ -87,7 +83,6 @@ export default function PayrollDetailPage({ params }: { params: Promise<{ id: st
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Ringkasan Gaji */}
         <Card className="col-span-1 md:col-span-2">
           <CardHeader className="bg-muted/50 border-b pb-4">
             <div className="flex justify-between items-center">
@@ -120,7 +115,6 @@ export default function PayrollDetailPage({ params }: { params: Promise<{ id: st
           </CardContent>
         </Card>
 
-        {/* Pendapatan */}
         <Card>
           <CardHeader>
             <CardTitle>Pendapatan</CardTitle>
@@ -139,7 +133,6 @@ export default function PayrollDetailPage({ params }: { params: Promise<{ id: st
           </CardContent>
         </Card>
 
-        {/* Potongan */}
         <Card>
           <CardHeader>
             <CardTitle>Potongan</CardTitle>

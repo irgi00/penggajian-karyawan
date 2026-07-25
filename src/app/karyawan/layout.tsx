@@ -1,13 +1,12 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import KaryawanShell from "@/components/layout/karyawan-shell";
+import { getSession } from "@/lib/auth";
 
 export default async function KaryawanLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies();
-  const role = cookieStore.get("user_role")?.value;
+  const session = await getSession();
 
-  if (role !== "karyawan") {
-    if (role === "admin") {
+  if (session?.role !== "EMPLOYEE") {
+    if (session?.role === "ADMIN") {
       redirect("/admin");
     } else {
       redirect("/login");
@@ -16,4 +15,3 @@ export default async function KaryawanLayout({ children }: { children: React.Rea
 
   return <KaryawanShell>{children}</KaryawanShell>;
 }
-

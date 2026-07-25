@@ -3,20 +3,17 @@ import { pool } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { success, error } from "@/lib/response";
 
-// Utility to validate UUID
 function isValidUUID(uuid: string) {
   const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return regex.test(uuid);
 }
 
-// GET /api/payrolls/:id (Get Payroll Details / Slip Gaji)
 export async function GET(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session) return error("Tidak terautentikasi", 401);
 
-    // Extract payroll id from URL path
-    const pathname = req.nextUrl.pathname; // e.g., /api/payrolls/123e4567-e89b-12d3-a456-426614174000
+    const pathname = req.nextUrl.pathname;
     const parts = pathname.split("/");
     const payrollId = parts[parts.length - 1];
 
@@ -24,18 +21,15 @@ export async function GET(req: NextRequest) {
       return error("payroll id tidak valid", 400);
     }
 
-    // Fetch payroll header with employee and period info
     const payrollRes = await pool.query(
-      `
-        SELECT p.id, p.status, p.basic_salary, p.position_allowance, p.gross_salary,
-               p.total_deduction, p.net_salary, p.approved_at, p.paid_at,
-               e.id AS employee_id, e.name AS employee_name,
-               pp.period_name
-        FROM payrolls p
-        JOIN employees e ON p.employee_id = e.id
-        JOIN payroll_periods pp ON p.payroll_period_id = pp.id
-        WHERE p.id = $1
-      `,
+      `SELECT p.id, p.status, p.basic_salary, p.position_allowance, p.gross_salary,
+              p.total_deduction, p.net_salary, p.approved_at, p.paid_at,
+              e.id AS employee_id, e.user_id, e.full_name AS employee_name,
+              pp.period_name
+       FROM payrolls p
+       JOIN employees e ON p.employee_id = e.id
+       JOIN payroll_periods pp ON p.payroll_period_id = pp.id
+       WHERE p.id = $1`,
       [payrollId]
     );
 
@@ -45,19 +39,15 @@ export async function GET(req: NextRequest) {
 
     const payroll = payrollRes.rows[0];
 
-    // Authorization: EMPLOYEE can only view own payroll
-    if (session.role === "EMPLOYEE" && payroll.employee_id !== session.id) {
+    if (session.role === "EMPLOYEE" && payroll.user_id !== session.id) {
       return error("Akses ditolak", 403);
     }
 
-    // Fetch payroll details components
     const detailsRes = await pool.query(
-      `
-        SELECT component_name, component_type, amount
-        FROM payroll_details
-        WHERE payroll_id = $1
-        ORDER BY component_type, component_name
-      `,
+      `SELECT component_name, component_type, amount
+       FROM payroll_details
+       WHERE payroll_id = $1
+       ORDER BY component_type, component_name`,
       [payrollId]
     );
 

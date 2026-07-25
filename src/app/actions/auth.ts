@@ -2,21 +2,11 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-
-export async function loginAction(role: "admin" | "karyawan") {
-  // Simpan role di cookie
-  const cookieStore = await cookies();
-  cookieStore.set("user_role", role, { path: "/" });
-
-  if (role === "admin") {
-    redirect("/admin");
-  } else {
-    redirect("/karyawan");
-  }
-}
+import { clearSessionCookie } from "@/lib/auth";
 
 export async function logoutAction() {
   const cookieStore = await cookies();
   cookieStore.delete("user_role");
+  await clearSessionCookie();
   redirect("/login");
 }

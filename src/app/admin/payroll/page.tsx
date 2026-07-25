@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Filter, PlayCircle, CheckCircle, CreditCard } from "lucide-react";
+import { PlayCircle, CheckCircle, CreditCard } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "@/components/ui/pagination";
@@ -31,11 +31,9 @@ export default function PayrollPage() {
   const [periods, setPeriods] = useState<PayrollPeriod[]>([]);
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>("");
   const [records, setRecords] = useState<PayrollRecord[]>([]);
-  
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
@@ -95,9 +93,8 @@ export default function PayrollPage() {
       });
       const data = await res.json();
       if (!data.success) {
-        setErrorMsg(data.error || "Gagal memproses penggajian.");
+        setErrorMsg(data.message || data.error || "Gagal memproses penggajian.");
       } else {
-        // refresh data
         fetchPayrolls(selectedPeriodId);
       }
     } catch (err: any) {
@@ -110,11 +107,11 @@ export default function PayrollPage() {
   const handleAction = async (id: string, action: "approve" | "pay") => {
     try {
       const res = await fetch(`/api/payrolls/${id}/${action}`, {
-        method: "POST",
+        method: "PUT",
       });
       const data = await res.json();
       if (!data.success) {
-        alert(data.error || `Gagal melakukan aksi ${action}`);
+        alert(data.message || data.error || `Gagal melakukan aksi ${action}`);
       } else {
         fetchPayrolls(selectedPeriodId);
       }
@@ -143,12 +140,8 @@ export default function PayrollPage() {
           <p className="text-muted-foreground mt-1">Simulasi dan proses penggajian karyawan</p>
         </div>
         <div className="flex gap-2">
-          <Button 
-            className="gap-2" 
-            onClick={handleProcessPayroll} 
-            disabled={processing || !selectedPeriodId}
-          >
-            <PlayCircle className="w-4 h-4" /> 
+          <Button className="gap-2" onClick={handleProcessPayroll} disabled={processing || !selectedPeriodId}>
+            <PlayCircle className="w-4 h-4" />
             {processing ? "Memproses..." : "Proses Penggajian"}
           </Button>
         </div>
@@ -173,7 +166,7 @@ export default function PayrollPage() {
                   disabled={loading}
                 >
                   <option value="" disabled>Pilih Periode Penggajian...</option>
-                  {periods.map(p => (
+                  {periods.map((p) => (
                     <option key={p.id} value={p.id}>{p.period_name}</option>
                   ))}
                 </select>,
@@ -185,9 +178,9 @@ export default function PayrollPage() {
           {loading ? (
             <LoadingSkeleton className="h-64 w-full" />
           ) : records.length === 0 ? (
-            <EmptyState 
-              title="Tidak ada data penggajian" 
-              description="Data penggajian untuk periode ini belum diproses atau tidak ditemukan." 
+            <EmptyState
+              title="Tidak ada data penggajian"
+              description="Data penggajian untuk periode ini belum diproses atau tidak ditemukan."
             />
           ) : (
             <Table>
@@ -205,16 +198,12 @@ export default function PayrollPage() {
                   <TableRow key={rec.id}>
                     <TableCell className="font-medium">{rec.id.slice(0, 8)}</TableCell>
                     <TableCell>{rec.employee_name}</TableCell>
-                    <TableCell>{new Date(rec.generated_at).toLocaleString('id-ID')}</TableCell>
-                    <TableCell>
-                      {getStatusBadge(rec.status)}
-                    </TableCell>
+                    <TableCell>{new Date(rec.generated_at).toLocaleString("id-ID")}</TableCell>
+                    <TableCell>{getStatusBadge(rec.status)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Link href={`/admin/payroll/${rec.id}`}>
-                          <Button variant="outline" size="sm">
-                            Detail
-                          </Button>
+                          <Button variant="outline" size="sm">Detail</Button>
                         </Link>
                         {rec.status === "DRAFT" && (
                           <Button variant="outline" size="sm" onClick={() => handleAction(rec.id, "approve")}>
