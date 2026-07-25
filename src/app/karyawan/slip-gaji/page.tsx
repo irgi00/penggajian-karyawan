@@ -28,14 +28,14 @@ export default async function SlipGajiPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Slip Gaji" description="Unduh dan lihat slip gaji Anda setiap bulannya." />
+      <PageHeader title="Slip Gaji" description="Lihat slip gaji Anda setiap bulannya." />
 
       {payrolls.length === 0 ? (
         <Card className="shadow-sm border-none">
           <CardContent className="p-12">
             <EmptyState
               title="Belum ada slip gaji yang diterbitkan"
-              description="Slip gaji bulan ini akan muncul di sini setelah payroll selesai diproses."
+              description="Slip gaji akan muncul di sini setelah payroll selesai diproses."
             />
           </CardContent>
         </Card>
@@ -56,7 +56,7 @@ export default async function SlipGajiPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <Link href={`/api/payrolls/${payroll.id}`} className="text-sm font-medium text-primary underline-offset-4 hover:underline">
+                <Link href={`/karyawan/slip-gaji/${payroll.id}`} className="text-sm font-medium text-primary underline-offset-4 hover:underline">
                   Lihat detail slip
                 </Link>
               </CardContent>

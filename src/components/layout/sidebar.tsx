@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, Users, Building, Briefcase, Calendar, Clock, DollarSign, LogOut, Menu } from "lucide-react";
+import { LayoutDashboard, Users, Building, Briefcase, Calendar, Clock, DollarSign, Gift, CalendarRange, LogOut } from "lucide-react";
 import { logoutAction } from "@/app/actions/auth";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
@@ -15,6 +15,8 @@ export function Sidebar({ isOpen }: { isOpen: boolean }) {
     { name: "Karyawan", href: "/admin/karyawan", icon: Users },
     { name: "Absensi", href: "/admin/absensi", icon: Calendar },
     { name: "Lembur", href: "/admin/lembur", icon: Clock },
+    { name: "Bonus", href: "/admin/bonus", icon: Gift },
+    { name: "Periode Payroll", href: "/admin/payroll-periods", icon: CalendarRange },
     { name: "Payroll", href: "/admin/payroll", icon: DollarSign },
   ];
 

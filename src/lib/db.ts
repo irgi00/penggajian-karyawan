@@ -1,17 +1,17 @@
 import { Pool } from "pg";
 
-let pool: Pool;
+const globalForPool = globalThis as typeof globalThis & {
+  pool?: Pool;
+};
 
-if (!global.pool) {
-  global.pool = new Pool({
+const pool =
+  globalForPool.pool ??
+  new Pool({
     connectionString: process.env.DATABASE_URL,
   });
+
+if (!globalForPool.pool) {
+  globalForPool.pool = pool;
 }
-pool = global.pool;
 
 export { pool };
-
-declare global {
-  // eslint-disable-next-line no-var
-  var pool: Pool;
-}

@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import Link from "next/link";
@@ -7,8 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Plus, Filter, MoreHorizontal, FileDown } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Plus, Filter, FileDown } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "@/components/ui/pagination";
 import { FilterBar } from "@/components/ui/filter-bar";
@@ -25,6 +23,7 @@ interface OvertimeRecord {
 export default function LemburPage() {
   const [records, setRecords] = useState<OvertimeRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState("");
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
@@ -35,9 +34,11 @@ export default function LemburPage() {
         const json = await res.json();
         if (json.success) {
           setRecords(json.data.overtime_records);
+        } else {
+          setErrorMsg(json.message || json.error || "Gagal memuat data lembur.");
         }
-      } catch (e) {
-        console.error(e);
+      } catch {
+        setErrorMsg("Terjadi kesalahan saat memuat data lembur.");
       } finally {
         setLoading(false);
       }
@@ -49,31 +50,33 @@ export default function LemburPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Lembur</h1>
-          <p className="text-muted-foreground mt-1">Kelola data lembur karyawan</p>
+          <p className="mt-1 text-muted-foreground">Kelola data lembur karyawan</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" className="gap-2">
-            <FileDown className="w-4 h-4" /> Export
+            <FileDown className="h-4 w-4" /> Export
           </Button>
           <Link href="/admin/lembur/create" className="inline-block">
             <Button className="gap-2">
-              <Plus className="w-4 h-4" /> Tambah Data
+              <Plus className="h-4 w-4" /> Tambah Data
             </Button>
           </Link>
         </div>
       </div>
 
+      {errorMsg && <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">{errorMsg}</div>}
+
       <Card className="border-none shadow-sm">
         <CardContent className="p-0">
-          <div className="flex flex-col sm:flex-row justify-between items-center p-4 gap-4 border-b">
+          <div className="flex flex-col items-center justify-between gap-4 border-b p-4 sm:flex-row">
             <FilterBar
               filters={[
-                <Input key="search" placeholder="Cari data..." className="flex-1" />, // placeholder
+                <Input key="search" placeholder="Cari data..." className="flex-1" />,
                 <Button key="filter" variant="outline" className="shrink-0">
-                  <Filter className="w-4 h-4" /> Filter
+                  <Filter className="h-4 w-4" /> Filter
                 </Button>,
               ]}
             />
@@ -95,13 +98,13 @@ export default function LemburPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginated.map((rec) => (
-                  <TableRow key={rec.id}>
-                    <TableCell className="font-medium">{rec.id.slice(0, 8)}</TableCell>
-                    <TableCell>{rec.employee_name}</TableCell>
-                    <TableCell>{rec.overtime_date}</TableCell>
-                    <TableCell>{rec.hours}</TableCell>
-                    <TableCell>{rec.description ?? "-"}</TableCell>
+                {paginated.map((record) => (
+                  <TableRow key={record.id}>
+                    <TableCell className="font-medium">{record.id.slice(0, 8)}</TableCell>
+                    <TableCell>{record.employee_name}</TableCell>
+                    <TableCell>{record.overtime_date}</TableCell>
+                    <TableCell>{record.hours}</TableCell>
+                    <TableCell>{record.description ?? "-"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -109,17 +112,12 @@ export default function LemburPage() {
           )}
 
           {records.length > 0 && (
-            <div className="flex items-center justify-between px-4 py-4 border-t text-sm text-muted-foreground">
+            <div className="flex items-center justify-between border-t px-4 py-4 text-sm text-muted-foreground">
               <div>
                 Menampilkan {Math.min((page - 1) * pageSize + 1, records.length)}-
                 {Math.min(page * pageSize, records.length)} dari {records.length} data
               </div>
-              <Pagination
-                totalItems={records.length}
-                pageSize={pageSize}
-                currentPage={page}
-                onPageChange={setPage}
-              />
+              <Pagination totalItems={records.length} pageSize={pageSize} currentPage={page} onPageChange={setPage} />
             </div>
           )}
         </CardContent>

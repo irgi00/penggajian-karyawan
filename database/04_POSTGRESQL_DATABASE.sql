@@ -196,18 +196,19 @@ CREATE INDEX IF NOT EXISTS idx_payroll_details_payroll_id ON payroll_details(pay
 
 -- 7. Seed Data
 -- Users
+-- Default password for all seeded accounts: Password123!
 INSERT INTO users (id, email, password_hash, role, is_active) VALUES 
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'admin@example.com', 'dummyhash1', 'ADMIN', true),
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12', 'john@example.com', 'dummyhash2', 'EMPLOYEE', true),
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13', 'jane@example.com', 'dummyhash3', 'EMPLOYEE', true),
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a14', 'bob@example.com', 'dummyhash4', 'EMPLOYEE', true),
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15', 'alice@example.com', 'dummyhash5', 'EMPLOYEE', true),
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a16', 'charlie@example.com', 'dummyhash6', 'EMPLOYEE', true),
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a17', 'dave@example.com', 'dummyhash7', 'EMPLOYEE', true),
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a18', 'eve@example.com', 'dummyhash8', 'EMPLOYEE', true),
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a19', 'frank@example.com', 'dummyhash9', 'EMPLOYEE', true),
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a20', 'grace@example.com', 'dummyhash10', 'EMPLOYEE', true),
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a21', 'heidi@example.com', 'dummyhash11', 'EMPLOYEE', true)
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'admin@example.com', '$2b$10$kqEq6Z4IPdK6uU3AKLb.J.3uUnUaz6y.S/0lJQGFD.jh7VYCMVVnG', 'ADMIN', true),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12', 'john@example.com', '$2b$10$kqEq6Z4IPdK6uU3AKLb.J.3uUnUaz6y.S/0lJQGFD.jh7VYCMVVnG', 'EMPLOYEE', true),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13', 'jane@example.com', '$2b$10$kqEq6Z4IPdK6uU3AKLb.J.3uUnUaz6y.S/0lJQGFD.jh7VYCMVVnG', 'EMPLOYEE', true),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a14', 'bob@example.com', '$2b$10$kqEq6Z4IPdK6uU3AKLb.J.3uUnUaz6y.S/0lJQGFD.jh7VYCMVVnG', 'EMPLOYEE', true),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15', 'alice@example.com', '$2b$10$kqEq6Z4IPdK6uU3AKLb.J.3uUnUaz6y.S/0lJQGFD.jh7VYCMVVnG', 'EMPLOYEE', true),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a16', 'charlie@example.com', '$2b$10$kqEq6Z4IPdK6uU3AKLb.J.3uUnUaz6y.S/0lJQGFD.jh7VYCMVVnG', 'EMPLOYEE', true),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a17', 'dave@example.com', '$2b$10$kqEq6Z4IPdK6uU3AKLb.J.3uUnUaz6y.S/0lJQGFD.jh7VYCMVVnG', 'EMPLOYEE', true),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a18', 'eve@example.com', '$2b$10$kqEq6Z4IPdK6uU3AKLb.J.3uUnUaz6y.S/0lJQGFD.jh7VYCMVVnG', 'EMPLOYEE', true),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a19', 'frank@example.com', '$2b$10$kqEq6Z4IPdK6uU3AKLb.J.3uUnUaz6y.S/0lJQGFD.jh7VYCMVVnG', 'EMPLOYEE', true),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a20', 'grace@example.com', '$2b$10$kqEq6Z4IPdK6uU3AKLb.J.3uUnUaz6y.S/0lJQGFD.jh7VYCMVVnG', 'EMPLOYEE', true),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a21', 'heidi@example.com', '$2b$10$kqEq6Z4IPdK6uU3AKLb.J.3uUnUaz6y.S/0lJQGFD.jh7VYCMVVnG', 'EMPLOYEE', true)
 ON CONFLICT (email) DO NOTHING;
 
 -- Departments
@@ -280,3 +281,4 @@ INSERT INTO payroll_details (payroll_id, component_name, component_type, amount)
 ON CONFLICT DO NOTHING;
 
 COMMIT;
+

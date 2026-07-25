@@ -65,8 +65,7 @@ export async function GET(req: NextRequest) {
     };
 
     return success({ payroll: payrollData }, "Berhasil mengambil rincian penggajian", 200);
-  } catch (err: any) {
-    console.error(err);
+  } catch {
     return error("Internal server error", 500);
   }
 }
