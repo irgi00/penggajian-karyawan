@@ -6,6 +6,11 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
+function isActive(pathname: string, href: string): boolean {
+  if (href === "/admin") return pathname === "/admin";
+  return pathname.startsWith(href);
+}
+
 export function Sidebar({ isOpen }: { isOpen: boolean }) {
   const pathname = usePathname();
   const adminLinks = [
@@ -40,13 +45,13 @@ export function Sidebar({ isOpen }: { isOpen: boolean }) {
         <div className="space-y-1 flex-1">
           {adminLinks.map((link) => {
             const Icon = link.icon;
-            const isActive = pathname.startsWith(link.href);
+            const active = isActive(pathname, link.href);
             return (
               <Link key={link.href} href={link.href}>
                 <div
                   className={cn(
                     "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
-                    isActive
+                    active
                       ? "bg-accent text-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-accent"
                   )}

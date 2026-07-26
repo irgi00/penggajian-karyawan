@@ -215,8 +215,8 @@ export function EmployeeForm({ mode, initialValues, positions, isSubmitting, api
                 value={values.employee_code}
                 onChange={(event) => setValues((current) => ({ ...current, employee_code: event.target.value }))}
                 maxLength={50}
-                disabled={mode === "edit" || isSubmitting}
-                required={mode === "create"}
+                disabled={true}
+                required={false}
               />
             </FormField>
 

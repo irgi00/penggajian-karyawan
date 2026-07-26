@@ -6,6 +6,11 @@ import { LayoutDashboard, Calendar, FileText, LogOut, User } from "lucide-react"
 import { logoutAction } from "@/app/actions/auth";
 import { cn } from "@/lib/utils";
 
+function isActive(pathname: string, href: string): boolean {
+  if (href === "/karyawan") return pathname === "/karyawan";
+  return pathname.startsWith(href);
+}
+
 export function KaryawanSidebar({ isOpen }: { isOpen?: boolean }) {
   const pathname = usePathname();
 
@@ -33,12 +38,12 @@ export function KaryawanSidebar({ isOpen }: { isOpen?: boolean }) {
         <div className="space-y-1 flex-1">
           {karyawanLinks.map((link) => {
             const Icon = link.icon;
-            const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`);
+            const active = isActive(pathname, link.href);
             return (
               <Link key={link.href} href={link.href}>
                 <div className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
-                  isActive 
+                  active 
                     ? "bg-primary text-primary-foreground" 
                     : "text-muted-foreground hover:text-foreground hover:bg-accent"
                 )}>
