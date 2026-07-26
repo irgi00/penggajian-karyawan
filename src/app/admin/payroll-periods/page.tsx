@@ -1,6 +1,5 @@
-"use client";
+﻿"use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,9 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 import { PageHeader } from "@/components/ui/page-header";
 import { Plus } from "lucide-react";
+import { MasterDataDialog } from "@/components/admin/master-data/master-data-dialog";
+import { PayrollPeriodForm, PayrollPeriodFormValues } from "@/components/admin/master-data/payroll-period-form";
+import { showToast } from "@/lib/toast";
 
 interface PayrollPeriod {
   id: string;
@@ -22,36 +24,73 @@ export default function PayrollPeriodsPage() {
   const [periods, setPeriods] = useState<PayrollPeriod[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [apiError, setApiError] = useState("");
+
+  const loadData = async () => {
+    setLoading(true);
+    setErrorMsg("");
+    try {
+      const res = await fetch("/api/payroll-periods");
+      const json = await res.json();
+      if (json.success) {
+        setPeriods(json.data.payroll_periods);
+      } else {
+        setErrorMsg(json.message || json.error || "Gagal mengambil data periode payroll");
+      }
+    } catch (error: any) {
+      setErrorMsg(error.message || "Terjadi kesalahan server");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch("/api/payroll-periods");
-        const json = await res.json();
-        if (json.success) {
-          setPeriods(json.data.payroll_periods);
-        } else {
-          setErrorMsg(json.message || json.error || "Gagal mengambil data periode payroll");
-        }
-      } catch (error: any) {
-        setErrorMsg(error.message || "Terjadi kesalahan server");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    const timer = window.setTimeout(() => {
+      void loadData();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, []);
+
+  const closeDialog = () => {
+    if (isSubmitting) return;
+    setDialogOpen(false);
+    setApiError("");
+  };
+
+  const handleCreate = async (values: PayrollPeriodFormValues) => {
+    setIsSubmitting(true);
+    setApiError("");
+    try {
+      const res = await fetch("/api/payroll-periods", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+      const json = await res.json();
+      if (!json.success) {
+        setApiError(json.message || json.error || "Gagal membuat periode payroll");
+        return;
+      }
+
+      showToast({ title: "Periode payroll ditambahkan", description: json.message || "Periode berhasil disimpan" });
+      setDialogOpen(false);
+      await loadData();
+    } catch (error: any) {
+      setApiError(error.message || "Terjadi kesalahan server");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <PageHeader title="Periode Payroll" description="Kelola periode penggajian yang tersedia." />
-        <Link href="/admin/payroll-periods/create" className="inline-block">
-          <Button className="gap-2">
-            <Plus className="w-4 h-4" /> Tambah Periode
-          </Button>
-        </Link>
+        <Button className="gap-2" onClick={() => setDialogOpen(true)}>
+          <Plus className="w-4 h-4" /> Tambah Periode
+        </Button>
       </div>
 
       <Card className="border-none shadow-sm">
@@ -88,6 +127,22 @@ export default function PayrollPeriodsPage() {
           )}
         </CardContent>
       </Card>
+
+      <MasterDataDialog
+        open={dialogOpen}
+        onOpenChange={(open) => {
+          if (!open) closeDialog();
+        }}
+        mode="create"
+        entityLabel="Periode Payroll"
+        description="Buat periode penggajian baru sesuai data kalender kerja."
+        isSubmitting={isSubmitting}
+      >
+        <PayrollPeriodForm mode="create" isSubmitting={isSubmitting} apiError={apiError} onSubmit={handleCreate} onCancel={closeDialog} />
+      </MasterDataDialog>
     </div>
   );
 }
+
+
+

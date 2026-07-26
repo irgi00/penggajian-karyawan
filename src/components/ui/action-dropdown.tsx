@@ -1,4 +1,4 @@
-import * as React from 'react';
+﻿import * as React from 'react';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -7,19 +7,18 @@ import {
   DropdownMenuItem,
 } from '@radix-ui/react-dropdown-menu';
 import { MoreHorizontal } from 'lucide-react';
-import Link from 'next/link';
 
 /**
  * ActionDropdown component for row actions.
  * Props:
- * - editHref: URL to navigate to when "Edit" is clicked.
+ * - onEdit: callback invoked when "Edit" is selected.
  * - onDelete: callback invoked when "Delete" is selected.
  */
 export const ActionDropdown: React.FC<{
-  editHref: string;
+  onEdit: () => void;
   onDelete: () => void;
   className?: string;
-}> = ({ editHref, onDelete, className }) => {
+}> = ({ onEdit, onDelete, className }) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -34,9 +33,7 @@ export const ActionDropdown: React.FC<{
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-40">
-        <DropdownMenuItem asChild>
-          <Link href={editHref}>Edit</Link>
-        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => onEdit()}>Edit</DropdownMenuItem>
         <DropdownMenuItem onSelect={onDelete}>Delete</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -51,13 +51,7 @@ export default async function AdminDashboard() {
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {stats.map((stat) => (
-          <StatCard
-            key={stat.title}
-            title={stat.title}
-            value={stat.value}
-            icon={stat.icon}
-            description="Data aktual database"
-          />
+          <StatCard key={stat.title} title={stat.title} value={stat.value} icon={stat.icon} description="Data aktual database" />
         ))}
       </div>
 
@@ -70,7 +64,6 @@ export default async function AdminDashboard() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID</TableHead>
                   <TableHead>Nama</TableHead>
                   <TableHead>Departemen</TableHead>
                   <TableHead>Jabatan</TableHead>
@@ -79,7 +72,6 @@ export default async function AdminDashboard() {
               <TableBody>
                 {recentEmployees.map((employee) => (
                   <TableRow key={employee.id}>
-                    <TableCell>{employee.id}</TableCell>
                     <TableCell>{employee.name}</TableCell>
                     <TableCell>{employee.department_name}</TableCell>
                     <TableCell>{employee.position_name}</TableCell>
@@ -102,7 +94,6 @@ export default async function AdminDashboard() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID</TableHead>
                   <TableHead>Periode</TableHead>
                   <TableHead>Gaji Bersih</TableHead>
                 </TableRow>
@@ -110,7 +101,6 @@ export default async function AdminDashboard() {
               <TableBody>
                 {recentPayrolls.map((payroll) => (
                   <TableRow key={payroll.id}>
-                    <TableCell>{payroll.id}</TableCell>
                     <TableCell>{payroll.period_name}</TableCell>
                     <TableCell>{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(payroll.net_salary)}</TableCell>
                   </TableRow>

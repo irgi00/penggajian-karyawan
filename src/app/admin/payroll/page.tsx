@@ -186,7 +186,6 @@ export default function PayrollPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID</TableHead>
                   <TableHead>Nama Karyawan</TableHead>
                   <TableHead>Waktu Generate</TableHead>
                   <TableHead>Status</TableHead>
@@ -196,8 +195,7 @@ export default function PayrollPage() {
               <TableBody>
                 {paginated.map((record) => (
                   <TableRow key={record.id}>
-                    <TableCell className="font-medium">{record.id.slice(0, 8)}</TableCell>
-                    <TableCell>{record.employee_name}</TableCell>
+                    <TableCell className="font-medium">{record.employee_name}</TableCell>
                     <TableCell>{new Date(record.generated_at).toLocaleString("id-ID")}</TableCell>
                     <TableCell>{getStatusBadge(record.status)}</TableCell>
                     <TableCell className="text-right">

@@ -1,25 +1,26 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
-import { FileDown, Filter, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { Plus, Filter, FileDown } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "@/components/ui/pagination";
 import { FilterBar } from "@/components/ui/filter-bar";
-import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
+import { PageHeader } from "@/components/ui/page-header";
 import { MasterDataDialog } from "@/components/admin/master-data/master-data-dialog";
-import { AttendanceForm, AttendanceFormValues } from "@/components/admin/attendance-form";
+import { OvertimeForm, OvertimeFormValues } from "@/components/admin/master-data/overtime-form";
 import { showToast } from "@/lib/toast";
 
-interface AttendanceRecord {
+interface OvertimeRecord {
   id: string;
   employee_name: string;
-  attendance_date: string;
-  status: string;
+  overtime_date: string;
+  hours: number;
+  description: string | null;
 }
 
 interface EmployeeOption {
@@ -30,16 +31,18 @@ interface EmployeeOption {
 
 interface PeriodOption {
   id: string;
-  start_date: string;
-  end_date: string;
+  period_name: string;
 }
 
-export default function AbsensiPage() {
-  const [records, setRecords] = useState<AttendanceRecord[]>([]);
-  const [employees, setEmployees] = useState<EmployeeOption[]>([]);
-  const [periods, setPeriods] = useState<PeriodOption[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState("");
+interface LemburPageClientProps {
+  records: OvertimeRecord[];
+  employees: EmployeeOption[];
+  periods: PeriodOption[];
+  errorMsg?: string;
+}
+
+export function LemburPageClient({ records, employees, periods, errorMsg = "" }: LemburPageClientProps) {
+  const router = useRouter();
   const [page, setPage] = useState(1);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,60 +50,7 @@ export default function AbsensiPage() {
   const [formKey, setFormKey] = useState(0);
   const pageSize = 10;
 
-  const loadData = async () => {
-    setLoading(true);
-    setErrorMsg("");
-    try {
-      const [recordsRes, employeesRes, periodsRes] = await Promise.all([
-        fetch("/api/attendance"),
-        fetch("/api/employees"),
-        fetch("/api/payroll-periods"),
-      ]);
-      const [recordsJson, employeesJson, periodsJson] = await Promise.all([
-        recordsRes.json(),
-        employeesRes.json(),
-        periodsRes.json(),
-      ]);
-
-      let nextError = "";
-      if (recordsJson.success) {
-        setRecords(recordsJson.data.attendance_records);
-      } else {
-        setRecords([]);
-        nextError = recordsJson.message || recordsJson.error || "Gagal memuat data absensi.";
-      }
-
-      if (employeesJson.success) {
-        setEmployees(employeesJson.data.employees);
-      } else {
-        if (!nextError) nextError = employeesJson.message || employeesJson.error || "Gagal memuat data karyawan.";
-        setEmployees([]);
-      }
-
-      if (periodsJson.success) {
-        setPeriods(periodsJson.data.payroll_periods);
-      } else {
-        if (!nextError) nextError = periodsJson.message || periodsJson.error || "Gagal memuat data periode payroll.";
-        setPeriods([]);
-      }
-
-      setErrorMsg(nextError);
-    } catch {
-      setRecords([]);
-      setEmployees([]);
-      setPeriods([]);
-      setErrorMsg("Terjadi kesalahan saat memuat data absensi.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void loadData();
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, []);
+  const paginated = records.slice((page - 1) * pageSize, page * pageSize);
 
   const openDialog = () => {
     setApiError("");
@@ -114,29 +64,30 @@ export default function AbsensiPage() {
     setApiError("");
   };
 
-  const handleCreate = async (values: AttendanceFormValues) => {
+  const handleCreate = async (values: OvertimeFormValues) => {
     setIsSubmitting(true);
     setApiError("");
     try {
-      const res = await fetch("/api/attendance", {
+      const res = await fetch("/api/overtime", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           employee_id: values.employee_id,
           payroll_period_id: values.payroll_period_id,
-          attendance_date: values.attendance_date,
-          status: values.status,
+          overtime_date: values.overtime_date,
+          hours: Number(values.hours),
+          description: values.description,
         }),
       });
       const json = await res.json();
       if (!json.success) {
-        setApiError(json.message || json.error || "Gagal mencatat absensi");
+        setApiError(json.message || json.error || "Gagal mencatat lembur");
         return;
       }
 
-      showToast({ title: "Absensi ditambahkan", description: json.message || "Data absensi berhasil disimpan" });
+      showToast({ title: "Lembur ditambahkan", description: json.message || "Data lembur berhasil disimpan" });
       setDialogOpen(false);
-      await loadData();
+      router.refresh();
     } catch (error: any) {
       setApiError(error.message || "Terjadi kesalahan server");
     } finally {
@@ -144,14 +95,12 @@ export default function AbsensiPage() {
     }
   };
 
-  const paginated = records.slice((page - 1) * pageSize, page * pageSize);
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Absensi</h1>
-          <p className="mt-1 text-muted-foreground">Kelola data absensi harian karyawan</p>
+          <h1 className="text-3xl font-bold tracking-tight">Lembur</h1>
+          <p className="mt-1 text-muted-foreground">Kelola data lembur karyawan</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" className="gap-2">
@@ -178,29 +127,25 @@ export default function AbsensiPage() {
             />
           </div>
 
-          {loading ? (
-            <LoadingSkeleton className="h-64 w-full" />
-          ) : records.length === 0 ? (
-            <EmptyState title="Tidak ada data absensi" description="Silakan tambahkan data absensi baru." />
+          {records.length === 0 ? (
+            <EmptyState title="Tidak ada data lembur" description="Silakan tambahkan data lembur baru." />
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID</TableHead>
                   <TableHead>Nama Karyawan</TableHead>
                   <TableHead>Tanggal</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>Jam</TableHead>
+                  <TableHead>Deskripsi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginated.map((record) => (
                   <TableRow key={record.id}>
-                    <TableCell className="font-medium">{record.id.slice(0, 8)}</TableCell>
                     <TableCell>{record.employee_name}</TableCell>
-                    <TableCell>{record.attendance_date}</TableCell>
-                    <TableCell>
-                      <Badge variant={record.status === "PRESENT" ? "success" : "destructive"}>{record.status}</Badge>
-                    </TableCell>
+                    <TableCell>{record.overtime_date}</TableCell>
+                    <TableCell>{record.hours}</TableCell>
+                    <TableCell>{record.description ?? "-"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -225,12 +170,13 @@ export default function AbsensiPage() {
           if (!open) closeDialog();
         }}
         mode="create"
-        entityLabel="Absensi"
-        description="Catat data kehadiran harian karyawan."
+        entityLabel="Lembur"
+        description="Catat data jam lembur karyawan."
         isSubmitting={isSubmitting}
       >
-        <AttendanceForm
+        <OvertimeForm
           key={formKey}
+          mode="create"
           employees={employees}
           periods={periods}
           isSubmitting={isSubmitting}
@@ -242,7 +188,3 @@ export default function AbsensiPage() {
     </div>
   );
 }
-
-
-
-
