@@ -81,7 +81,7 @@ export function PayrollSlip({ payroll, isAdmin }: PayrollSlipProps) {
                 <span className="col-span-2 font-semibold text-sm print:text-black">: {payroll.employee_name}</span>
               </div>
               <div className="grid grid-cols-3">
-                <span className="text-muted-foreground font-medium text-sm print:text-black">NIK</span>
+                <span className="text-muted-foreground font-medium text-sm print:text-black">Kode Karyawan</span>
                 <span className="col-span-2 font-semibold text-sm print:text-black">: {payroll.employee_code || "-"}</span>
               </div>
               <div className="grid grid-cols-3">

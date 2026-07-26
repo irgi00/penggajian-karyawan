@@ -10,6 +10,7 @@ interface MasterDataDialogProps {
   entityLabel: string;
   description: string;
   isSubmitting?: boolean;
+  contentClassName?: string;
   children: ReactNode;
 }
 
@@ -20,6 +21,7 @@ export function MasterDataDialog({
   entityLabel,
   description,
   isSubmitting = false,
+  contentClassName,
   children,
 }: MasterDataDialogProps) {
   const title = `${mode === "create" ? "Tambah" : "Edit"} ${entityLabel}`;
@@ -27,6 +29,7 @@ export function MasterDataDialog({
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => { if (!isSubmitting) onOpenChange(nextOpen); }}>
       <DialogContent
+        className={contentClassName}
         onInteractOutside={(event) => {
           if (isSubmitting) event.preventDefault();
         }}

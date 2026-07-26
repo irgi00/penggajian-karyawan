@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { FileDown, Filter, Plus } from "lucide-react";
@@ -328,6 +328,7 @@ export default function KaryawanPage() {
         entityLabel="Karyawan"
         description={dialogMode === "create" ? "Isi formulir untuk menambah karyawan baru." : "Perbarui data karyawan yang sudah terdaftar."}
         isSubmitting={isSubmitting}
+        contentClassName="!flex !flex-col !max-w-3xl !max-h-[90vh] !overflow-hidden"
       >
         {dialogMode === "edit" && dialogLoading ? (
           <LoadingSkeleton className="h-72 w-full" />
@@ -371,7 +372,4 @@ export default function KaryawanPage() {
     </div>
   );
 }
-
-
-
 

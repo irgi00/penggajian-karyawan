@@ -91,133 +91,231 @@ export function EmployeeForm({ mode, initialValues, positions, isSubmitting, api
     });
   };
 
+  const fieldClassName = "space-y-4";
+  const selectClassName = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <FormField label="NIK / Kode Karyawan *" error={errors.employee_code}>
-        <Input
-          value={values.employee_code}
-          onChange={(event) => setValues((current) => ({ ...current, employee_code: event.target.value }))}
-          maxLength={50}
-          disabled={mode === "edit" || isSubmitting}
-          required={mode === "create"}
-        />
-      </FormField>
+    <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+      <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+        {mode === "create" ? (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <FormField label="NIK / Kode Karyawan *" error={errors.employee_code} className={fieldClassName}>
+              <Input
+                value={values.employee_code}
+                onChange={(event) => setValues((current) => ({ ...current, employee_code: event.target.value }))}
+                maxLength={50}
+                disabled={isSubmitting}
+                required
+              />
+            </FormField>
 
-      <FormField label="Nama Lengkap *" error={errors.full_name}>
-        <Input
-          value={values.full_name}
-          onChange={(event) => setValues((current) => ({ ...current, full_name: event.target.value }))}
-          maxLength={100}
-          disabled={isSubmitting}
-          required
-        />
-      </FormField>
+            <FormField label="Nama Lengkap *" error={errors.full_name} className={fieldClassName}>
+              <Input
+                value={values.full_name}
+                onChange={(event) => setValues((current) => ({ ...current, full_name: event.target.value }))}
+                maxLength={100}
+                disabled={isSubmitting}
+                required
+              />
+            </FormField>
 
-      <FormField label="Jabatan *" error={errors.position_id}>
-        <select
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          value={values.position_id}
-          onChange={(event) => setValues((current) => ({ ...current, position_id: event.target.value }))}
-          disabled={isSubmitting}
-          required
-        >
-          <option value="">-- Pilih Jabatan --</option>
-          {positions.map((position) => (
-            <option key={position.id} value={position.id}>
-              {position.code} - {position.name} ({position.department_name})
-            </option>
-          ))}
-        </select>
-      </FormField>
+            <FormField label="Jabatan *" error={errors.position_id} className={fieldClassName}>
+              <select
+                className={selectClassName}
+                value={values.position_id}
+                onChange={(event) => setValues((current) => ({ ...current, position_id: event.target.value }))}
+                disabled={isSubmitting}
+                required
+              >
+                <option value="">-- Pilih Jabatan --</option>
+                {positions.map((position) => (
+                  <option key={position.id} value={position.id}>
+                    {position.code} - {position.name} ({position.department_name})
+                  </option>
+                ))}
+              </select>
+            </FormField>
 
-      {mode === "create" ? (
-        <>
-          <FormField label="Email *" error={errors.email}>
-            <Input
-              type="email"
-              value={values.email}
-              onChange={(event) => setValues((current) => ({ ...current, email: event.target.value }))}
-              disabled={isSubmitting}
-              required
-            />
-          </FormField>
+            <FormField label="Email *" error={errors.email} className={fieldClassName}>
+              <Input
+                type="email"
+                value={values.email}
+                onChange={(event) => setValues((current) => ({ ...current, email: event.target.value }))}
+                disabled={isSubmitting}
+                required
+              />
+            </FormField>
 
-          <FormField label="Password *" error={errors.password}>
-            <Input
-              type="password"
-              value={values.password}
-              onChange={(event) => setValues((current) => ({ ...current, password: event.target.value }))}
-              minLength={8}
-              disabled={isSubmitting}
-              required
-            />
-          </FormField>
-        </>
-      ) : (
-        <FormField label="Status">
-          <Input value={values.employment_status || "-"} disabled />
-        </FormField>
-      )}
+            <FormField label="Password *" error={errors.password} className={fieldClassName}>
+              <Input
+                type="password"
+                value={values.password}
+                onChange={(event) => setValues((current) => ({ ...current, password: event.target.value }))}
+                minLength={8}
+                disabled={isSubmitting}
+                required
+              />
+            </FormField>
 
-      <FormField label="Jenis Kelamin *" error={errors.gender}>
-        <select
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          value={values.gender}
-          onChange={(event) => setValues((current) => ({ ...current, gender: event.target.value }))}
-          disabled={isSubmitting}
-          required
-        >
-          <option value="L">Laki-laki (L)</option>
-          <option value="P">Perempuan (P)</option>
-        </select>
-      </FormField>
+            <FormField label="Jenis Kelamin *" error={errors.gender} className={fieldClassName}>
+              <select
+                className={selectClassName}
+                value={values.gender}
+                onChange={(event) => setValues((current) => ({ ...current, gender: event.target.value }))}
+                disabled={isSubmitting}
+                required
+              >
+                <option value="L">Laki-laki (L)</option>
+                <option value="P">Perempuan (P)</option>
+              </select>
+            </FormField>
 
-      <FormField label="Nomor Telepon" error={errors.phone}>
-        <Input
-          value={values.phone}
-          onChange={(event) => setValues((current) => ({ ...current, phone: event.target.value }))}
-          disabled={isSubmitting}
-        />
-      </FormField>
+            <FormField label="Nomor Telepon" error={errors.phone} className={fieldClassName}>
+              <Input
+                value={values.phone}
+                onChange={(event) => setValues((current) => ({ ...current, phone: event.target.value }))}
+                disabled={isSubmitting}
+              />
+            </FormField>
 
-      <FormField label="Alamat" error={errors.address}>
-        <Input
-          value={values.address}
-          onChange={(event) => setValues((current) => ({ ...current, address: event.target.value }))}
-          disabled={isSubmitting}
-        />
-      </FormField>
+            <FormField label="Tanggal Bergabung *" error={errors.join_date} className={fieldClassName}>
+              <Input
+                type="date"
+                value={values.join_date}
+                onChange={(event) => setValues((current) => ({ ...current, join_date: event.target.value }))}
+                disabled={isSubmitting}
+                required
+              />
+            </FormField>
 
-      <FormField label="Tanggal Bergabung *" error={errors.join_date}>
-        <Input
-          type="date"
-          value={values.join_date}
-          onChange={(event) => setValues((current) => ({ ...current, join_date: event.target.value }))}
-          disabled={isSubmitting}
-          required
-        />
-      </FormField>
+            <FormField label="Salary Override" error={errors.salary_override} className={fieldClassName}>
+              <Input
+                type="number"
+                min={0}
+                value={values.salary_override}
+                onChange={(event) => setValues((current) => ({ ...current, salary_override: event.target.value }))}
+                disabled={isSubmitting}
+              />
+            </FormField>
 
-      <FormField label="Salary Override" error={errors.salary_override}>
-        <Input
-          type="number"
-          min={0}
-          value={values.salary_override}
-          onChange={(event) => setValues((current) => ({ ...current, salary_override: event.target.value }))}
-          disabled={isSubmitting}
-        />
-      </FormField>
+            <div className="hidden md:block" aria-hidden="true" />
 
-      {apiError ? <p className="text-sm text-destructive">{apiError}</p> : null}
+            <FormField label="Alamat" error={errors.address} className="md:col-span-2 space-y-4">
+              <Input
+                value={values.address}
+                onChange={(event) => setValues((current) => ({ ...current, address: event.target.value }))}
+                disabled={isSubmitting}
+              />
+            </FormField>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <FormField label="NIK / Kode Karyawan *" error={errors.employee_code} className={fieldClassName}>
+              <Input
+                value={values.employee_code}
+                onChange={(event) => setValues((current) => ({ ...current, employee_code: event.target.value }))}
+                maxLength={50}
+                disabled={mode === "edit" || isSubmitting}
+                required={mode === "create"}
+              />
+            </FormField>
 
-      <div className="flex justify-end gap-2 border-t pt-4">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
-          Batal
-        </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Menyimpan..." : mode === "create" ? "Simpan" : "Simpan Perubahan"}
-        </Button>
+            <FormField label="Nama Lengkap *" error={errors.full_name} className={fieldClassName}>
+              <Input
+                value={values.full_name}
+                onChange={(event) => setValues((current) => ({ ...current, full_name: event.target.value }))}
+                maxLength={100}
+                disabled={isSubmitting}
+                required
+              />
+            </FormField>
+
+            <FormField label="Jabatan *" error={errors.position_id} className={fieldClassName}>
+              <select
+                className={selectClassName}
+                value={values.position_id}
+                onChange={(event) => setValues((current) => ({ ...current, position_id: event.target.value }))}
+                disabled={isSubmitting}
+                required
+              >
+                <option value="">-- Pilih Jabatan --</option>
+                {positions.map((position) => (
+                  <option key={position.id} value={position.id}>
+                    {position.code} - {position.name} ({position.department_name})
+                  </option>
+                ))}
+              </select>
+            </FormField>
+
+            <FormField label="Status" className={fieldClassName}>
+              <Input value={values.employment_status || "-"} disabled />
+            </FormField>
+
+            <FormField label="Jenis Kelamin *" error={errors.gender} className={fieldClassName}>
+              <select
+                className={selectClassName}
+                value={values.gender}
+                onChange={(event) => setValues((current) => ({ ...current, gender: event.target.value }))}
+                disabled={isSubmitting}
+                required
+              >
+                <option value="L">Laki-laki (L)</option>
+                <option value="P">Perempuan (P)</option>
+              </select>
+            </FormField>
+
+            <FormField label="Nomor Telepon" error={errors.phone} className={fieldClassName}>
+              <Input
+                value={values.phone}
+                onChange={(event) => setValues((current) => ({ ...current, phone: event.target.value }))}
+                disabled={isSubmitting}
+              />
+            </FormField>
+
+            <FormField label="Alamat" error={errors.address} className={fieldClassName}>
+              <Input
+                value={values.address}
+                onChange={(event) => setValues((current) => ({ ...current, address: event.target.value }))}
+                disabled={isSubmitting}
+              />
+            </FormField>
+
+            <FormField label="Tanggal Bergabung *" error={errors.join_date} className={fieldClassName}>
+              <Input
+                type="date"
+                value={values.join_date}
+                onChange={(event) => setValues((current) => ({ ...current, join_date: event.target.value }))}
+                disabled={isSubmitting}
+                required
+              />
+            </FormField>
+
+            <FormField label="Salary Override" error={errors.salary_override} className={fieldClassName}>
+              <Input
+                type="number"
+                min={0}
+                value={values.salary_override}
+                onChange={(event) => setValues((current) => ({ ...current, salary_override: event.target.value }))}
+                disabled={isSubmitting}
+              />
+            </FormField>
+          </div>
+        )}
+
+        {apiError ? <p className="mt-4 text-sm text-destructive">{apiError}</p> : null}
+      </div>
+
+      <div className="sticky bottom-0 shrink-0 border-t bg-background pt-4">
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+            Batal
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Menyimpan..." : mode === "create" ? "Simpan" : "Simpan Perubahan"}
+          </Button>
+        </div>
       </div>
     </form>
   );
 }
+
