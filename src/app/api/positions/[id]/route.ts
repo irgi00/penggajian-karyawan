@@ -35,10 +35,10 @@ export async function PUT(
       return error("Name wajib diisi", 400);
     }
     if (basic_salary === undefined || typeof basic_salary !== "number" || basic_salary < 0) {
-      return error("Basic salary wajib diisi dan minimal 0", 400);
+      return error("Gaji Pokok wajib diisi dan minimal 0", 400);
     }
     if (position_allowance === undefined || typeof position_allowance !== "number" || position_allowance < 0) {
-      return error("Position allowance wajib diisi dan minimal 0", 400);
+      return error("Tunjangan Jabatan wajib diisi dan minimal 0", 400);
     }
 
     // Business Rule: Pastikan jabatan ada

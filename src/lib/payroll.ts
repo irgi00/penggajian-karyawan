@@ -92,12 +92,12 @@ export async function calculatePayrollForEmployee(
     totalDeduction,
     netSalary,
     details: [
-      { name: "Basic Salary", type: "INCOME", amount: basicSalary },
-      { name: "Position Allowance", type: "INCOME", amount: positionAllowance },
-      { name: "Overtime", type: "INCOME", amount: overtimeAmount },
+      { name: "Gaji Pokok", type: "INCOME", amount: basicSalary },
+      { name: "Tunjangan Jabatan", type: "INCOME", amount: positionAllowance },
+      { name: "Lembur", type: "INCOME", amount: overtimeAmount },
       { name: "Bonus", type: "INCOME", amount: bonusTotal },
       { name: "BPJS", type: "DEDUCTION", amount: bpjsDeduction },
-      { name: "Tax", type: "DEDUCTION", amount: taxDeduction },
+      { name: "Pajak", type: "DEDUCTION", amount: taxDeduction },
     ],
   };
 }
