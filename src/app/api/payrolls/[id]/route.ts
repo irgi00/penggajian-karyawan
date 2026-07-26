@@ -8,14 +8,15 @@ function isValidUUID(uuid: string) {
   return regex.test(uuid);
 }
 
-export async function GET(req: NextRequest) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const session = await getSession();
     if (!session) return error("Tidak terautentikasi", 401);
 
-    const pathname = req.nextUrl.pathname;
-    const parts = pathname.split("/");
-    const payrollId = parts[parts.length - 1];
+    const { id: payrollId } = await params;
 
     if (!payrollId || !isValidUUID(payrollId)) {
       return error("payroll id tidak valid", 400);

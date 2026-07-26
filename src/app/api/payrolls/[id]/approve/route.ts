@@ -10,17 +10,16 @@ function isValidUUID(uuid: string) {
 }
 
 // PUT /api/payrolls/:id/approve (ADMIN only)
-export async function PUT(req: NextRequest) {
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const session = await getSession();
     if (!session) return error("Tidak terautentikasi", 401);
     if (session.role !== "ADMIN") return error("Akses ditolak", 403);
 
-    // Removed invalid extraction of id from searchParams
-    // In Next.js dynamic route, id is part of the path, accessed via req.nextUrl.pathname
-    const pathname = req.nextUrl.pathname; // e.g., /api/payrolls/123/approve
-    const parts = pathname.split('/');
-    const payrollId = parts[parts.length - 2]; // second last segment is the id
+    const { id: payrollId } = await params;
 
     if (!payrollId || !isValidUUID(payrollId)) {
       return error("payroll id tidak valid", 400);

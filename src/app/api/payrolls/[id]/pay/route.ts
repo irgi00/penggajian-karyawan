@@ -10,16 +10,16 @@ function isValidUUID(uuid: string) {
 }
 
 // PUT /api/payrolls/:id/pay (ADMIN only)
-export async function PUT(req: NextRequest) {
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const session = await getSession();
     if (!session) return error("Tidak terautentikasi", 401);
     if (session.role !== "ADMIN") return error("Akses ditolak", 403);
 
-    // Extract payroll id from URL path
-    const pathname = req.nextUrl.pathname; // e.g., /api/payrolls/123/pay
-    const parts = pathname.split('/');
-    const payrollId = parts[parts.length - 2]; // second last segment is the id
+    const { id: payrollId } = await params;
 
     if (!payrollId || !isValidUUID(payrollId)) {
       return error("payroll id tidak valid", 400);
