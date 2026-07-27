@@ -3,7 +3,6 @@ import { pool } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { success, error } from "@/lib/response";
 
-// GET /api/payrolls?payroll_period_id=...
 export async function GET(req: NextRequest) {
   try {
     const session = await getSession();

@@ -3,13 +3,11 @@ import { pool } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { success, error } from "@/lib/response";
 
-// Utility to validate UUID strings
 function isValidUUID(uuid: string) {
   const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return regex.test(uuid);
 }
 
-// Utility to calculate working days (Mon-Fri) between two dates inclusive
 function calculateWorkingDays(start: string, end: string): number {
   const startDate = new Date(start);
   const endDate = new Date(end);
@@ -22,7 +20,6 @@ function calculateWorkingDays(start: string, end: string): number {
   return count;
 }
 
-// 1.1 Get All Payroll Periods (ADMIN only)
 export async function GET(req: NextRequest) {
   try {
     const session = await getSession();
@@ -41,7 +38,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// 1.2 Create Payroll Period (ADMIN only)
 export async function POST(req: NextRequest) {
   try {
     const session = await getSession();

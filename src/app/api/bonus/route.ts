@@ -3,13 +3,11 @@ import { pool } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { success, error } from "@/lib/response";
 
-// Utility function to check if string is valid UUID
 function isValidUUID(uuid: string) {
   const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return regex.test(uuid);
 }
 
-// 3.1 Get All Bonus
 export async function GET(req: NextRequest) {
   try {
     const session = await getSession();
@@ -56,7 +54,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// 3.2 Record Bonus
 export async function POST(req: NextRequest) {
   try {
     const session = await getSession();

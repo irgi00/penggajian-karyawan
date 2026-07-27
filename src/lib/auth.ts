@@ -23,6 +23,7 @@ export function verifyJWT(token: string): JwtPayload | null {
   }
 }
 
+// Membersihkan sesi secara aman jika proses hapus cookie gagal karena konteks render yang terbatas.
 async function clearSessionSafely() {
   try {
     await clearSessionCookie();

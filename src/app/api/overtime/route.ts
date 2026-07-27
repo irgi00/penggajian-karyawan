@@ -3,13 +3,11 @@ import { pool } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { success, error } from "@/lib/response";
 
-// Utility function to check if string is valid UUID
 function isValidUUID(uuid: string) {
   const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return regex.test(uuid);
 }
 
-// Utility function to check if string is valid YYYY-MM-DD date
 function isValidDate(dateString: string) {
   const regex = /^\d{4}-\d{2}-\d{2}$/;
   if (!regex.test(dateString)) return false;
@@ -19,7 +17,6 @@ function isValidDate(dateString: string) {
   return date.toISOString().slice(0, 10) === dateString;
 }
 
-// 2.1 Get All Overtime
 export async function GET(req: NextRequest) {
   try {
     const session = await getSession();
@@ -67,7 +64,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// 2.2 Record Overtime
 export async function POST(req: NextRequest) {
   try {
     const session = await getSession();

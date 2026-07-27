@@ -7,7 +7,6 @@ import { success, error } from "@/lib/response";
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// 1.3 Update Department
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -80,7 +79,6 @@ export async function PUT(
   }
 }
 
-// 1.4 Delete Department
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

@@ -5,7 +5,6 @@ import { success, error } from "@/lib/response";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// 2.3 Update Position
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -78,7 +77,6 @@ export async function PUT(
   }
 }
 
-// 2.4 Delete Position
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

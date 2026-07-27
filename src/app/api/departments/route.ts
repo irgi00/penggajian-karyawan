@@ -3,7 +3,6 @@ import { pool } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { success, error } from "@/lib/response";
 
-// 1.1 Get All Departments
 export async function GET(req: NextRequest) {
   try {
     const session = await getSession();
@@ -27,7 +26,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// 1.2 Create Department
 export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
