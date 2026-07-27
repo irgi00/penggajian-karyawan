@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { FileDown, Filter, Plus } from "lucide-react";
@@ -13,6 +13,7 @@ import { FilterBar } from "@/components/ui/filter-bar";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 import { MasterDataDialog } from "@/components/admin/master-data/master-data-dialog";
 import { AttendanceForm, AttendanceFormValues } from "@/components/admin/attendance-form";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { showToast } from "@/lib/toast";
 
 interface AttendanceRecord {
@@ -32,6 +33,7 @@ interface PeriodOption {
   id: string;
   start_date: string;
   end_date: string;
+  period_name?: string;
 }
 
 export default function AbsensiPage() {
@@ -45,6 +47,10 @@ export default function AbsensiPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState("");
   const [formKey, setFormKey] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [monthFilter, setMonthFilter] = useState("ALL");
   const pageSize = 10;
 
   const loadData = async () => {
@@ -65,6 +71,7 @@ export default function AbsensiPage() {
       let nextError = "";
       if (recordsJson.success) {
         setRecords(recordsJson.data.attendance_records);
+        setPage(1);
       } else {
         setRecords([]);
         nextError = recordsJson.message || recordsJson.error || "Gagal memuat data absensi.";
@@ -144,7 +151,66 @@ export default function AbsensiPage() {
     }
   };
 
-  const paginated = records.slice((page - 1) * pageSize, page * pageSize);
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const monthOptions = Array.from(new Set(records.map((record) => record.attendance_date.slice(0, 7)))).sort().reverse();
+  const filteredRecords = records.filter((record) => {
+    const matchesSearch =
+      normalizedQuery.length === 0 ||
+      record.employee_name.toLowerCase().includes(normalizedQuery) ||
+      record.attendance_date.toLowerCase().includes(normalizedQuery) ||
+      record.status.toLowerCase().includes(normalizedQuery);
+
+    const matchesStatus = statusFilter === "ALL" || record.status === statusFilter;
+    const matchesMonth = monthFilter === "ALL" || record.attendance_date.startsWith(monthFilter);
+
+    return matchesSearch && matchesStatus && matchesMonth;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filteredRecords.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const paginated = filteredRecords.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const handleExport = () => {
+    if (filteredRecords.length === 0) {
+      showToast({
+        title: "Tidak ada data untuk diexport",
+        description: "Ubah pencarian atau filter terlebih dahulu.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const headers = ["Nama Karyawan", "Tanggal", "Status"];
+    const csvRows = [
+      headers.join(","),
+      ...filteredRecords.map((record) =>
+        [record.employee_name, record.attendance_date, record.status]
+          .map((value) => `"${String(value).replace(/"/g, '""')}"`)
+          .join(",")
+      ),
+    ];
+
+    const blob = new Blob(["\ufeff" + csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `absensi-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+
+    showToast({
+      title: "Export berhasil",
+      description: `${filteredRecords.length} data absensi berhasil diexport.`,
+    });
+  };
+
+  const handleResetFilters = () => {
+    setSearchQuery("");
+    setStatusFilter("ALL");
+    setMonthFilter("ALL");
+    setPage(1);
+    setFilterDialogOpen(false);
+  };
 
   return (
     <div className="space-y-6">
@@ -154,7 +220,7 @@ export default function AbsensiPage() {
           <p className="mt-1 text-muted-foreground">Kelola data absensi harian karyawan</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2" onClick={handleExport} disabled={filteredRecords.length === 0}>
             <FileDown className="h-4 w-4" /> Export
           </Button>
           <Button className="gap-2" onClick={openDialog}>
@@ -170,8 +236,17 @@ export default function AbsensiPage() {
           <div className="flex flex-col items-center justify-between gap-4 border-b p-4 sm:flex-row">
             <FilterBar
               filters={[
-                <Input key="search" placeholder="Cari data..." className="flex-1" />,
-                <Button key="filter" variant="outline" className="shrink-0">
+                <Input
+                  key="search"
+                  placeholder="Cari nama, tanggal, atau status..."
+                  className="flex-1"
+                  value={searchQuery}
+                  onChange={(event) => {
+                    setSearchQuery(event.target.value);
+                    setPage(1);
+                  }}
+                />,
+                <Button key="filter" variant="outline" className="shrink-0" onClick={() => setFilterDialogOpen(true)}>
                   <Filter className="h-4 w-4" /> Filter
                 </Button>,
               ]}
@@ -180,13 +255,12 @@ export default function AbsensiPage() {
 
           {loading ? (
             <LoadingSkeleton className="h-64 w-full" />
-          ) : records.length === 0 ? (
-            <EmptyState title="Tidak ada data absensi" description="Silakan tambahkan data absensi baru." />
+          ) : filteredRecords.length === 0 ? (
+            <EmptyState title="Tidak ada data absensi" description="Tidak ada data absensi yang cocok dengan pencarian atau filter." />
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID</TableHead>
                   <TableHead>Nama Karyawan</TableHead>
                   <TableHead>Tanggal</TableHead>
                   <TableHead>Status</TableHead>
@@ -195,7 +269,6 @@ export default function AbsensiPage() {
               <TableBody>
                 {paginated.map((record) => (
                   <TableRow key={record.id}>
-                    <TableCell className="font-medium">{record.id.slice(0, 8)}</TableCell>
                     <TableCell>{record.employee_name}</TableCell>
                     <TableCell>{record.attendance_date}</TableCell>
                     <TableCell>
@@ -207,17 +280,72 @@ export default function AbsensiPage() {
             </Table>
           )}
 
-          {records.length > 0 && (
+          {filteredRecords.length > 0 && (
             <div className="flex items-center justify-between border-t px-4 py-4 text-sm text-muted-foreground">
               <div>
-                Menampilkan {Math.min((page - 1) * pageSize + 1, records.length)}-
-                {Math.min(page * pageSize, records.length)} dari {records.length} data
+                Menampilkan {Math.min((currentPage - 1) * pageSize + 1, filteredRecords.length)}-
+                {Math.min(currentPage * pageSize, filteredRecords.length)} dari {filteredRecords.length} data
               </div>
-              <Pagination totalItems={records.length} pageSize={pageSize} currentPage={page} onPageChange={setPage} />
+              <Pagination totalItems={filteredRecords.length} pageSize={pageSize} currentPage={currentPage} onPageChange={setPage} />
             </div>
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Filter Absensi</DialogTitle>
+            <DialogDescription>Pilih filter untuk mempersempit daftar absensi.</DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">Status</label>
+              <select
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                value={statusFilter}
+                onChange={(event) => {
+                  setStatusFilter(event.target.value);
+                  setPage(1);
+                }}
+              >
+                <option value="ALL">Semua Status</option>
+                <option value="PRESENT">PRESENT</option>
+                <option value="ALPHA">ALPHA</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">Bulan</label>
+              <select
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                value={monthFilter}
+                onChange={(event) => {
+                  setMonthFilter(event.target.value);
+                  setPage(1);
+                }}
+              >
+                <option value="ALL">Semua Bulan</option>
+                {monthOptions.map((month) => (
+                  <option key={month} value={month}>
+                    {month}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={handleResetFilters}>
+              Reset
+            </Button>
+            <Button type="button" onClick={() => setFilterDialogOpen(false)}>
+              Terapkan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <MasterDataDialog
         open={dialogOpen}
@@ -242,7 +370,3 @@ export default function AbsensiPage() {
     </div>
   );
 }
-
-
-
-

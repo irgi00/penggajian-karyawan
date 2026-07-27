@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -11,6 +11,7 @@ import { Search, Plus, Filter, MoreHorizontal, FileDown, Trash2 } from "lucide-r
 import { MasterDataDialog } from "@/components/admin/master-data/master-data-dialog";
 import { PositionForm, PositionFormValues } from "@/components/admin/master-data/position-form";
 import { DeleteDialog } from "@/components/ui/delete-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { showToast } from "@/lib/toast";
 
 interface PositionRecord {
@@ -43,6 +44,9 @@ export function JabatanPageClient({ positions, departments, errorMsg = "" }: Jab
   const [apiError, setApiError] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<PositionRecord | null>(null);
   const [formKey, setFormKey] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  const [departmentFilter, setDepartmentFilter] = useState("ALL");
 
   const formatRupiah = (angka: number) =>
     new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(angka);
@@ -140,6 +144,59 @@ export function JabatanPageClient({ positions, departments, errorMsg = "" }: Jab
       }
     : null;
 
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredPositions = positions.filter((position) => {
+    const matchesSearch =
+      normalizedQuery.length === 0 ||
+      (position.code || "").toLowerCase().includes(normalizedQuery) ||
+      position.name.toLowerCase().includes(normalizedQuery) ||
+      position.department_name.toLowerCase().includes(normalizedQuery);
+
+    const matchesDepartment = departmentFilter === "ALL" || position.department_id === departmentFilter;
+
+    return matchesSearch && matchesDepartment;
+  });
+
+  const handleExport = () => {
+    if (filteredPositions.length === 0) {
+      showToast({
+        title: "Tidak ada data untuk diexport",
+        description: "Ubah pencarian atau filter terlebih dahulu.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const headers = ["Kode", "Nama Jabatan", "Departemen", "Gaji Pokok", "Tunjangan Jabatan"];
+    const csvRows = [
+      headers.join(","),
+      ...filteredPositions.map((position) =>
+        [position.code || "-", position.name, position.department_name, position.basic_salary, position.position_allowance]
+          .map((value) => `"${String(value).replace(/"/g, '""')}"`)
+          .join(",")
+      ),
+    ];
+
+    const blob = new Blob(["\ufeff" + csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `jabatan-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+
+    showToast({
+      title: "Export berhasil",
+      description: `${filteredPositions.length} data jabatan berhasil diexport.`,
+    });
+  };
+
+  const handleResetFilters = () => {
+    setSearchQuery("");
+    setDepartmentFilter("ALL");
+    setFilterDialogOpen(false);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
@@ -148,7 +205,7 @@ export function JabatanPageClient({ positions, departments, errorMsg = "" }: Jab
           <p className="mt-1 text-muted-foreground">Kelola data jabatan dan golongan</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2" onClick={handleExport} disabled={filteredPositions.length === 0}>
             <FileDown className="h-4 w-4" /> Export
           </Button>
           <Button className="gap-2" onClick={openCreateDialog}>
@@ -162,9 +219,9 @@ export function JabatanPageClient({ positions, departments, errorMsg = "" }: Jab
           <div className="flex flex-col items-center justify-between gap-4 border-b p-4 sm:flex-row">
             <div className="relative w-full sm:w-72">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Cari data..." className="pl-9" />
+              <Input placeholder="Cari kode, jabatan, atau departemen..." className="pl-9" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} />
             </div>
-            <Button variant="outline" className="shrink-0 gap-2">
+            <Button variant="outline" className="shrink-0 gap-2" onClick={() => setFilterDialogOpen(true)}>
               <Filter className="h-4 w-4" /> Filter
             </Button>
           </div>
@@ -183,8 +240,8 @@ export function JabatanPageClient({ positions, departments, errorMsg = "" }: Jab
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {positions.length > 0 ? (
-                  positions.map((position) => (
+                {filteredPositions.length > 0 ? (
+                  filteredPositions.map((position) => (
                     <TableRow key={position.id}>
                       <TableCell className="font-medium">{position.code || "-"}</TableCell>
                       <TableCell>{position.name}</TableCell>
@@ -205,7 +262,7 @@ export function JabatanPageClient({ positions, departments, errorMsg = "" }: Jab
                 ) : (
                   <TableRow>
                     <TableCell colSpan={5} className="p-0">
-                      <EmptyState title="Tidak ada data jabatan" description="Saat ini tidak ada jabatan yang terdaftar." />
+                      <EmptyState title="Tidak ada data jabatan" description="Tidak ada jabatan yang cocok dengan pencarian atau filter." />
                     </TableCell>
                   </TableRow>
                 )}
@@ -214,10 +271,42 @@ export function JabatanPageClient({ positions, departments, errorMsg = "" }: Jab
           )}
 
           <div className="flex items-center justify-between border-t px-4 py-4 text-sm text-muted-foreground">
-            <div>Menampilkan total {positions.length} data</div>
+            <div>Menampilkan total {filteredPositions.length} data</div>
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Filter Jabatan</DialogTitle>
+            <DialogDescription>Pilih departemen untuk mempersempit daftar jabatan.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-muted-foreground">Departemen</label>
+            <select
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              value={departmentFilter}
+              onChange={(event) => setDepartmentFilter(event.target.value)}
+            >
+              <option value="ALL">Semua Departemen</option>
+              {departments.map((department) => (
+                <option key={department.id} value={department.id}>
+                  {department.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={handleResetFilters}>
+              Reset
+            </Button>
+            <Button type="button" onClick={() => setFilterDialogOpen(false)}>
+              Terapkan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <MasterDataDialog
         open={dialogOpen}

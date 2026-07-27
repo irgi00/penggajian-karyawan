@@ -1,6 +1,13 @@
-import * as React from 'react';
-import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogClose } from '@radix-ui/react-dialog';
-import { Button } from '@/components/ui/button';
+import * as React from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 /**
  * Generic confirmation dialog.
@@ -25,29 +32,31 @@ export const ConfirmDialog: React.FC<{
   title,
   description,
   onConfirm,
-  confirmText = 'Ya, hapus',
-  cancelText = 'Batal',
+  confirmText = "Ya, hapus",
+  cancelText = "Batal",
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild />
-      <DialogContent>
-        <div className="flex flex-col space-y-2">
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
-        </div>
-        <div className="flex space-x-2 mt-4">
-          <DialogClose asChild>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              {cancelText}
-            </Button>
-          </DialogClose>          <Button
+        </DialogHeader>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            {cancelText}
+          </Button>
+          <Button
+            type="button"
             variant="destructive"
-            onClick={() => { onConfirm(); onOpenChange(false); }}
+            onClick={() => {
+              onConfirm();
+              onOpenChange(false);
+            }}
           >
             {confirmText}
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

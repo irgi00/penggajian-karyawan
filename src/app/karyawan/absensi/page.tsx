@@ -7,7 +7,7 @@ export default function AbsensiKaryawanPage() {
     <div className="space-y-6">
       <PageHeader
         title="Absensi Saya"
-        description="Kelola dan lihat riwayat kehadiran Anda di sini."
+        description="Lihat riwayat kehadiran Anda di sini."
       />
 
       <Card className="shadow-sm border-none">

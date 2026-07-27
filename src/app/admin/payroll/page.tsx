@@ -5,12 +5,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PlayCircle, CheckCircle, CreditCard } from "lucide-react";
+import { PlayCircle, CheckCircle, CreditCard, FileDown, Filter } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "@/components/ui/pagination";
 import { FilterBar } from "@/components/ui/filter-bar";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { showToast } from "@/lib/toast";
 import Link from "next/link";
 
 interface PayrollRecord {
@@ -33,6 +35,9 @@ export default function PayrollPage() {
   const [processing, setProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [page, setPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const pageSize = 10;
 
   const fetchPayrolls = async (periodId: string) => {
@@ -44,6 +49,7 @@ export default function PayrollPage() {
       const json = await res.json();
       if (json.success) {
         setRecords(json.data.payrolls);
+        setPage(1);
       } else {
         setRecords([]);
         setErrorMsg(json.message || json.error || "Gagal memuat data payroll.");
@@ -137,7 +143,64 @@ export default function PayrollPage() {
     }
   };
 
-  const paginated = records.slice((page - 1) * pageSize, page * pageSize);
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredRecords = records.filter((record) => {
+    const matchesSearch =
+      normalizedQuery.length === 0 ||
+      record.id.toLowerCase().includes(normalizedQuery) ||
+      record.employee_name.toLowerCase().includes(normalizedQuery) ||
+      record.status.toLowerCase().includes(normalizedQuery) ||
+      new Date(record.generated_at).toLocaleString("id-ID").toLowerCase().includes(normalizedQuery);
+
+    const matchesStatus = statusFilter === "ALL" || record.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filteredRecords.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const paginated = filteredRecords.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const handleExport = () => {
+    if (filteredRecords.length === 0) {
+      showToast({
+        title: "Tidak ada data untuk diexport",
+        description: "Ubah pencarian atau filter terlebih dahulu.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const headers = ["ID Payroll", "Nama Karyawan", "Status", "Waktu Generate"];
+    const csvRows = [
+      headers.join(","),
+      ...filteredRecords.map((record) =>
+        [record.id, record.employee_name, record.status, new Date(record.generated_at).toLocaleString("id-ID")]
+          .map((value) => `"${String(value).replace(/"/g, '""')}"`)
+          .join(",")
+      ),
+    ];
+
+    const blob = new Blob(["\ufeff" + csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `payroll-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+
+    showToast({
+      title: "Export berhasil",
+      description: `${filteredRecords.length} data payroll berhasil diexport.`,
+    });
+  };
+
+  const handleResetFilters = () => {
+    setSearchQuery("");
+    setStatusFilter("ALL");
+    setPage(1);
+    setFilterDialogOpen(false);
+  };
 
   return (
     <div className="space-y-6">
@@ -147,6 +210,9 @@ export default function PayrollPage() {
           <p className="mt-1 text-muted-foreground">Simulasi dan proses penggajian karyawan</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" className="gap-2" onClick={handleExport} disabled={filteredRecords.length === 0}>
+            <FileDown className="h-4 w-4" /> Export
+          </Button>
           <Button className="gap-2" onClick={handleProcessPayroll} disabled={processing || !selectedPeriodId}>
             <PlayCircle className="h-4 w-4" />
             {processing ? "Memproses..." : "Proses Penggajian"}
@@ -173,15 +239,27 @@ export default function PayrollPage() {
                     <option key={period.id} value={period.id}>{period.period_name}</option>
                   ))}
                 </select>,
-                <Input key="search" placeholder="Cari data..." className="w-full flex-1" />,
+                <Input
+                  key="search"
+                  placeholder="Cari nama, status, waktu, atau ID payroll..."
+                  className="w-full flex-1"
+                  value={searchQuery}
+                  onChange={(event) => {
+                    setSearchQuery(event.target.value);
+                    setPage(1);
+                  }}
+                />,
+                <Button key="filter" variant="outline" className="shrink-0" onClick={() => setFilterDialogOpen(true)}>
+                  <Filter className="h-4 w-4" /> Filter
+                </Button>,
               ]}
             />
           </div>
 
           {loading ? (
             <LoadingSkeleton className="h-64 w-full" />
-          ) : records.length === 0 ? (
-            <EmptyState title="Tidak ada data penggajian" description="Data penggajian untuk periode ini belum diproses atau tidak ditemukan." />
+          ) : filteredRecords.length === 0 ? (
+            <EmptyState title="Tidak ada data penggajian" description="Data penggajian untuk periode ini belum diproses atau tidak cocok dengan pencarian/filter." />
           ) : (
             <Table>
               <TableHeader>
@@ -221,17 +299,50 @@ export default function PayrollPage() {
             </Table>
           )}
 
-          {records.length > 0 && (
+          {filteredRecords.length > 0 && (
             <div className="flex items-center justify-between border-t px-4 py-4 text-sm text-muted-foreground">
               <div>
-                Menampilkan {Math.min((page - 1) * pageSize + 1, records.length)}-
-                {Math.min(page * pageSize, records.length)} dari {records.length} data
+                Menampilkan {Math.min((currentPage - 1) * pageSize + 1, filteredRecords.length)}-
+                {Math.min(currentPage * pageSize, filteredRecords.length)} dari {filteredRecords.length} data
               </div>
-              <Pagination totalItems={records.length} pageSize={pageSize} currentPage={page} onPageChange={setPage} />
+              <Pagination totalItems={filteredRecords.length} pageSize={pageSize} currentPage={currentPage} onPageChange={setPage} />
             </div>
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Filter Payroll</DialogTitle>
+            <DialogDescription>Pilih status untuk mempersempit daftar payroll.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-muted-foreground">Status</label>
+            <select
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              value={statusFilter}
+              onChange={(event) => {
+                setStatusFilter(event.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="ALL">Semua Status</option>
+              <option value="DRAFT">DRAFT</option>
+              <option value="APPROVED">APPROVED</option>
+              <option value="PAID">PAID</option>
+            </select>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={handleResetFilters}>
+              Reset
+            </Button>
+            <Button type="button" onClick={() => setFilterDialogOpen(false)}>
+              Terapkan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

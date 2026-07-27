@@ -53,6 +53,7 @@ const defaultValues: EmployeeFormValues = {
 export function EmployeeForm({ mode, initialValues, positions, isSubmitting, apiError, onSubmit, onCancel }: EmployeeFormProps) {
   const [values, setValues] = useState<EmployeeFormValues>(initialValues ?? defaultValues);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showPassword, setShowPassword] = useState(false);
 
   const validate = () => {
     const nextErrors: Record<string, string> = {};
@@ -65,6 +66,7 @@ export function EmployeeForm({ mode, initialValues, positions, isSubmitting, api
     if (mode === "create" && !values.email.trim()) nextErrors.email = "Email wajib diisi";
     if (mode === "create" && values.email && !/^\S+@\S+\.\S+$/.test(values.email)) nextErrors.email = "Email harus valid";
     if (mode === "create" && (!values.password || values.password.length < 8)) nextErrors.password = "Password wajib diisi minimal 8 karakter";
+    if (mode === "edit" && values.password && values.password.length < 8) nextErrors.password = "Password baru minimal 8 karakter";
     if (!values.gender || (values.gender !== "L" && values.gender !== "P")) nextErrors.gender = "Jenis kelamin wajib dipilih";
     if (!values.join_date) nextErrors.join_date = "Tanggal bergabung wajib diisi";
     if (values.salary_override !== "" && Number(values.salary_override) < 0) nextErrors.salary_override = "Salary override minimal 0";
@@ -92,14 +94,42 @@ export function EmployeeForm({ mode, initialValues, positions, isSubmitting, api
   };
 
   const fieldClassName = "space-y-4";
+  const gridClassName = "grid grid-cols-1 gap-4 md:grid-cols-2";
   const selectClassName = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+
+  const renderPasswordField = () => (
+    <FormField label={mode === "create" ? "Password *" : "Password Baru"} error={errors.password} className={fieldClassName}>
+      <div className="space-y-2">
+        <div className="relative">
+          <Input
+            type={showPassword ? "text" : "password"}
+            value={values.password}
+            onChange={(event) => setValues((current) => ({ ...current, password: event.target.value }))}
+            minLength={8}
+            disabled={isSubmitting}
+            required={mode === "create"}
+            className="pr-20"
+          />
+          <button
+            type="button"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground transition hover:text-foreground"
+            onClick={() => setShowPassword((current) => !current)}
+            disabled={isSubmitting}
+          >
+            {showPassword ? "Sembunyikan" : "Lihat"}
+          </button>
+        </div>
+        {mode === "edit" ? <p className="text-xs text-muted-foreground">Kosongkan jika password tidak ingin diganti.</p> : null}
+      </div>
+    </FormField>
+  );
 
   return (
     <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
       <div className="min-h-0 flex-1 overflow-y-auto pr-1">
         {mode === "create" ? (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <FormField label="NIK / Kode Karyawan *" error={errors.employee_code} className={fieldClassName}>
+          <div className={gridClassName}>
+            <FormField label="Kode Karyawan *" error={errors.employee_code} className={fieldClassName}>
               <Input
                 value={values.employee_code}
                 onChange={(event) => setValues((current) => ({ ...current, employee_code: event.target.value }))}
@@ -146,16 +176,7 @@ export function EmployeeForm({ mode, initialValues, positions, isSubmitting, api
               />
             </FormField>
 
-            <FormField label="Password *" error={errors.password} className={fieldClassName}>
-              <Input
-                type="password"
-                value={values.password}
-                onChange={(event) => setValues((current) => ({ ...current, password: event.target.value }))}
-                minLength={8}
-                disabled={isSubmitting}
-                required
-              />
-            </FormField>
+            {renderPasswordField()}
 
             <FormField label="Jenis Kelamin *" error={errors.gender} className={fieldClassName}>
               <select
@@ -200,7 +221,7 @@ export function EmployeeForm({ mode, initialValues, positions, isSubmitting, api
 
             <div className="hidden md:block" aria-hidden="true" />
 
-            <FormField label="Alamat" error={errors.address} className="md:col-span-2 space-y-4">
+            <FormField label="Alamat" error={errors.address} className="space-y-4 md:col-span-2">
               <Input
                 value={values.address}
                 onChange={(event) => setValues((current) => ({ ...current, address: event.target.value }))}
@@ -209,13 +230,13 @@ export function EmployeeForm({ mode, initialValues, positions, isSubmitting, api
             </FormField>
           </div>
         ) : (
-          <div className="space-y-4">
-            <FormField label="NIK / Kode Karyawan *" error={errors.employee_code} className={fieldClassName}>
+          <div className={gridClassName}>
+            <FormField label="Kode Karyawan *" error={errors.employee_code} className={fieldClassName}>
               <Input
                 value={values.employee_code}
                 onChange={(event) => setValues((current) => ({ ...current, employee_code: event.target.value }))}
                 maxLength={50}
-                disabled={true}
+                disabled
                 required={false}
               />
             </FormField>
@@ -251,6 +272,8 @@ export function EmployeeForm({ mode, initialValues, positions, isSubmitting, api
               <Input value={values.employment_status || "-"} disabled />
             </FormField>
 
+            {renderPasswordField()}
+
             <FormField label="Jenis Kelamin *" error={errors.gender} className={fieldClassName}>
               <select
                 className={selectClassName}
@@ -268,14 +291,6 @@ export function EmployeeForm({ mode, initialValues, positions, isSubmitting, api
               <Input
                 value={values.phone}
                 onChange={(event) => setValues((current) => ({ ...current, phone: event.target.value }))}
-                disabled={isSubmitting}
-              />
-            </FormField>
-
-            <FormField label="Alamat" error={errors.address} className={fieldClassName}>
-              <Input
-                value={values.address}
-                onChange={(event) => setValues((current) => ({ ...current, address: event.target.value }))}
                 disabled={isSubmitting}
               />
             </FormField>
@@ -299,6 +314,14 @@ export function EmployeeForm({ mode, initialValues, positions, isSubmitting, api
                 disabled={isSubmitting}
               />
             </FormField>
+
+            <FormField label="Alamat" error={errors.address} className="space-y-4 md:col-span-2">
+              <Input
+                value={values.address}
+                onChange={(event) => setValues((current) => ({ ...current, address: event.target.value }))}
+                disabled={isSubmitting}
+              />
+            </FormField>
           </div>
         )}
 
@@ -318,4 +341,3 @@ export function EmployeeForm({ mode, initialValues, positions, isSubmitting, api
     </form>
   );
 }
-

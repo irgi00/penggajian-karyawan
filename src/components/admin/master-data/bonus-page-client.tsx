@@ -1,14 +1,16 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 import { PageHeader } from "@/components/ui/page-header";
-import { Plus } from "lucide-react";
+import { FilterBar } from "@/components/ui/filter-bar";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Filter, Plus } from "lucide-react";
 import { MasterDataDialog } from "@/components/admin/master-data/master-data-dialog";
 import { BonusForm, BonusFormValues } from "@/components/admin/master-data/bonus-form";
 import { showToast } from "@/lib/toast";
@@ -44,6 +46,9 @@ export function BonusPageClient({ records, employees, periods, errorMsg = "" }: 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState("");
   const [formKey, setFormKey] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  const [amountFilter, setAmountFilter] = useState("ALL");
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(Number(amount));
@@ -91,6 +96,28 @@ export function BonusPageClient({ records, employees, periods, errorMsg = "" }: 
     }
   };
 
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredRecords = records.filter((record) => {
+    const matchesSearch =
+      normalizedQuery.length === 0 ||
+      record.employee_name.toLowerCase().includes(normalizedQuery) ||
+      record.bonus_name.toLowerCase().includes(normalizedQuery) ||
+      String(record.amount).includes(normalizedQuery);
+
+    const matchesAmount =
+      amountFilter === "ALL" ||
+      (amountFilter === "LT_1M" && Number(record.amount) < 1000000) ||
+      (amountFilter === "GTE_1M" && Number(record.amount) >= 1000000);
+
+    return matchesSearch && matchesAmount;
+  });
+
+  const handleResetFilters = () => {
+    setSearchQuery("");
+    setAmountFilter("ALL");
+    setFilterDialogOpen(false);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -102,11 +129,28 @@ export function BonusPageClient({ records, employees, periods, errorMsg = "" }: 
 
       <Card className="border-none shadow-sm">
         <CardContent className="p-0">
+          <div className="flex flex-col items-center justify-between gap-4 border-b p-4 sm:flex-row">
+            <FilterBar
+              filters={[
+                <Input
+                  key="search"
+                  placeholder="Cari karyawan, bonus, atau jumlah..."
+                  className="flex-1"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                />,
+                <Button key="filter" variant="outline" className="shrink-0" onClick={() => setFilterDialogOpen(true)}>
+                  <Filter className="h-4 w-4" /> Filter
+                </Button>,
+              ]}
+            />
+          </div>
+
           {errorMsg ? (
             <div className="p-6 text-sm text-destructive">{errorMsg}</div>
-          ) : records.length === 0 ? (
+          ) : filteredRecords.length === 0 ? (
             <div className="p-12">
-              <EmptyState title="Belum ada data bonus" description="Tambahkan bonus baru untuk mulai mencatat data bonus karyawan." />
+              <EmptyState title="Belum ada data bonus" description="Tidak ada bonus yang cocok dengan pencarian atau filter." />
             </div>
           ) : (
             <Table>
@@ -118,7 +162,7 @@ export function BonusPageClient({ records, employees, periods, errorMsg = "" }: 
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {records.map((record) => (
+                {filteredRecords.map((record) => (
                   <TableRow key={record.id}>
                     <TableCell>{record.employee_name}</TableCell>
                     <TableCell>{record.bonus_name}</TableCell>
@@ -130,6 +174,35 @@ export function BonusPageClient({ records, employees, periods, errorMsg = "" }: 
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Filter Bonus</DialogTitle>
+            <DialogDescription>Pilih rentang jumlah untuk mempersempit daftar bonus.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-muted-foreground">Jumlah Bonus</label>
+            <select
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              value={amountFilter}
+              onChange={(event) => setAmountFilter(event.target.value)}
+            >
+              <option value="ALL">Semua Jumlah</option>
+              <option value="LT_1M">Kurang dari 1.000.000</option>
+              <option value="GTE_1M">1.000.000 atau lebih</option>
+            </select>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={handleResetFilters}>
+              Reset
+            </Button>
+            <Button type="button" onClick={() => setFilterDialogOpen(false)}>
+              Terapkan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <MasterDataDialog
         open={dialogOpen}
